@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search, Copy, CheckCircle2, Star, Edit2, Trash2, Loader2, Code2 } from 'lucide-react';
+import { Search, Copy, CheckCircle2, Star, Edit2, Trash2, Loader2, Code2, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -8,6 +8,7 @@ import './SnippetManager.css';
 
 const SnippetManager = () => {
     const [snippets, setSnippets] = useState([]);
+    const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('All');
@@ -15,6 +16,16 @@ const SnippetManager = () => {
 
     const [showModal, setShowModal] = useState(false);
     const [editSnippet, setEditSnippet] = useState(null);
+
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [newSnippet, setNewSnippet] = useState({
+        title: '',
+        command: '',
+        note: '',
+        category: 'Terminal',
+        tags: '',
+        projectId: ''
+    });
 
     const fetchSnippets = async () => {
         try {
@@ -29,8 +40,20 @@ const SnippetManager = () => {
         }
     };
 
+    const fetchProjects = async () => {
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+            const { data } = await axios.get('http://localhost:5000/api/projects', config);
+            setProjects(data);
+        } catch (error) {
+            console.error('Projeleri yükleme hatası:', error);
+        }
+    };
+
     useEffect(() => {
         fetchSnippets();
+        fetchProjects();
     }, []);
 
     const copyToClipboard = (command, id) => {
@@ -64,6 +87,37 @@ const SnippetManager = () => {
         }
     };
 
+    const handleCreate = async (e) => {
+        e.preventDefault();
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+            const payload = {
+                title: newSnippet.title,
+                command: newSnippet.command,
+                note: newSnippet.note,
+                category: newSnippet.category,
+                projectId: newSnippet.projectId || undefined,
+                tags: newSnippet.tags ? newSnippet.tags.split(',').map(t => t.trim()).filter(t => t !== '') : []
+            };
+
+            await axios.post('http://localhost:5000/api/snippets', payload, config);
+            toast.success('Yeni komut eklendi');
+            setShowAddModal(false);
+            setNewSnippet({
+                title: '',
+                command: '',
+                note: '',
+                category: 'Terminal',
+                tags: '',
+                projectId: ''
+            });
+            fetchSnippets();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Komut eklenemedi');
+        }
+    };
+
     const handleUpdate = async (e) => {
         e.preventDefault();
         try {
@@ -74,6 +128,7 @@ const SnippetManager = () => {
                 command: editSnippet.command,
                 note: editSnippet.note,
                 category: editSnippet.category,
+                projectId: editSnippet.projectId || null,
                 tags: typeof editSnippet.tags === 'string' ? editSnippet.tags.split(',').map(t => t.trim()).filter(t => t !== '') : editSnippet.tags
             };
 
@@ -124,11 +179,14 @@ const SnippetManager = () => {
 
     return (
         <div className="page-container snippets-page">
-            <div className="page-header">
+            <div className="page-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '0.5rem' }}>
                 <div>
                     <h2 className="page-title flex-center gap-sm" style={{justifyContent: 'flex-start'}}><Code2 size={28} /> Komut Kasası</h2>
-                    <p className="page-subtitle">Tüm projelerinizdeki komutları, kod parçacıklarını ve notları buradan yönetin.</p>
+                    <p className="page-subtitle" style={{ margin: 0 }}>Tüm projelerinizdeki komutları, kod parçacıklarını ve notları buradan yönetin.</p>
                 </div>
+                <button className="btn-primary flex-center gap-sm" style={{ width: 'auto', padding: '0.75rem 1.5rem' }} onClick={() => setShowAddModal(true)}>
+                    <Plus size={20} /> Yeni Komut Ekle
+                </button>
             </div>
 
             <div className="snippet-filters">
@@ -226,6 +284,15 @@ const SnippetManager = () => {
                                 <textarea className="form-input command-input" rows="4" required value={editSnippet.command} onChange={e => setEditSnippet({...editSnippet, command: e.target.value})}></textarea>
                             </div>
                             <div className="form-group">
+                                <label>İlişkili Proje (Opsiyonel)</label>
+                                <select className="form-input" value={editSnippet.projectId || ''} onChange={e => setEditSnippet({...editSnippet, projectId: e.target.value || ''})}>
+                                    <option value="">Genel / Projesiz</option>
+                                    {projects.map((project) => (
+                                        <option key={project._id} value={project._id}>{project.title}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="form-group">
                                 <label>Kategori</label>
                                 <select className="form-input" value={editSnippet.category} onChange={e => setEditSnippet({...editSnippet, category: e.target.value})}>
                                     <option value="Terminal">Terminal</option>
@@ -246,6 +313,94 @@ const SnippetManager = () => {
                             </div>
                             <div className="modal-actions">
                                 <button type="button" className="btn-outline" onClick={() => setShowModal(false)}>İptal</button>
+                                <button type="submit" className="btn-primary" style={{width: 'auto'}}>Kaydet</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Modal */}
+            {showAddModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h3>Yeni Komut Ekle</h3>
+                            <button className="close-btn" onClick={() => setShowAddModal(false)}>&times;</button>
+                        </div>
+                        <form onSubmit={handleCreate}>
+                            <div className="form-group">
+                                <label>Kısa Başlık</label>
+                                <input 
+                                    type="text" 
+                                    className="form-input" 
+                                    required 
+                                    placeholder="Komut başlığını girin..." 
+                                    value={newSnippet.title} 
+                                    onChange={e => setNewSnippet({...newSnippet, title: e.target.value})} 
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Komut Kodu (Command)</label>
+                                <textarea 
+                                    className="form-input command-input" 
+                                    rows="4" 
+                                    required 
+                                    placeholder="Komut veya kod satırını buraya yapıştırın..." 
+                                    value={newSnippet.command} 
+                                    onChange={e => setNewSnippet({...newSnippet, command: e.target.value})}
+                                ></textarea>
+                            </div>
+                            <div className="form-group">
+                                <label>İlişkili Proje (Opsiyonel)</label>
+                                <select 
+                                    className="form-input" 
+                                    value={newSnippet.projectId} 
+                                    onChange={e => setNewSnippet({...newSnippet, projectId: e.target.value})}
+                                >
+                                    <option value="">Genel / Projesiz</option>
+                                    {projects.map((project) => (
+                                        <option key={project._id} value={project._id}>{project.title}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Kategori</label>
+                                <select 
+                                    className="form-input" 
+                                    value={newSnippet.category} 
+                                    onChange={e => setNewSnippet({...newSnippet, category: e.target.value})}
+                                >
+                                    <option value="Terminal">Terminal</option>
+                                    <option value="Docker">Docker</option>
+                                    <option value="Database">Database</option>
+                                    <option value="Git">Git</option>
+                                    <option value="Server">Server</option>
+                                    <option value="Other">Diğer</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Etiketler (Tags) - Virgülle ayırın</label>
+                                <input 
+                                    type="text" 
+                                    className="form-input" 
+                                    placeholder="Örn: docker, backend, mongo" 
+                                    value={newSnippet.tags} 
+                                    onChange={e => setNewSnippet({...newSnippet, tags: e.target.value})} 
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Açıklama / Not</label>
+                                <input 
+                                    type="text" 
+                                    className="form-input" 
+                                    placeholder="Komuta dair kısa bir not yazın..." 
+                                    value={newSnippet.note} 
+                                    onChange={e => setNewSnippet({...newSnippet, note: e.target.value})} 
+                                />
+                            </div>
+                            <div className="modal-actions">
+                                <button type="button" className="btn-outline" onClick={() => setShowAddModal(false)}>İptal</button>
                                 <button type="submit" className="btn-primary" style={{width: 'auto'}}>Kaydet</button>
                             </div>
                         </form>

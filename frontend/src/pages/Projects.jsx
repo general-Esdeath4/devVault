@@ -122,12 +122,12 @@ const Projects = () => {
 
     return (
         <div className="page-container projects-page">
-            <div className="page-header">
+            <div className="page-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '0.5rem' }}>
                 <div>
-                    <h2 className="page-title">Tüm Projeler</h2>
-                    <p className="page-subtitle">Projelerinizi listeleyin, filtreleyin ve yönetin.</p>
+                    <h2 className="page-title" style={{ margin: 0 }}>Tüm Projeler</h2>
+                    <p className="page-subtitle" style={{ margin: 0, marginTop: '0.5rem' }}>Projelerinizi listeleyin, filtreleyin ve yönetin.</p>
                 </div>
-                <button className="btn-primary flex-center gap-sm" style={{width: 'auto'}} onClick={openCreateModal}>
+                <button className="btn-primary flex-center gap-sm" style={{ width: 'auto', padding: '0.75rem 1.5rem' }} onClick={openCreateModal}>
                     <Plus size={20} /> Yeni Proje
                 </button>
             </div>
