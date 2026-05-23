@@ -17,9 +17,13 @@ const snippetSchema = mongoose.Schema(
         tags: [{
             type: String
         }],
-        projectId: {
+        owner: {
             type: mongoose.Schema.Types.ObjectId,
             required: true,
+            ref: 'User', // User modeli ile ilişki
+        },
+        projectId: {
+            type: mongoose.Schema.Types.ObjectId,
             ref: 'Project', // Project modeli ile ilişki
         },
     },

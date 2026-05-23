@@ -5,9 +5,24 @@ const Project = require('../models/Project');
 // @route   GET /api/snippets
 // @access  Private
 const getAllSnippets = async (req, res) => {
-    const projects = await Project.find({ owner: req.user._id }).select('_id');
-    const projectIds = projects.map(p => p._id);
-    const snippets = await Snippet.find({ projectId: { $in: projectIds } }).sort({ createdAt: -1 });
+    try {
+        const legacySnippets = await Snippet.find({ owner: { $exists: false } });
+        if (legacySnippets.length > 0) {
+            for (let snippet of legacySnippets) {
+                if (snippet.projectId) {
+                    const project = await Project.findById(snippet.projectId);
+                    if (project) {
+                        snippet.owner = project.owner;
+                        await snippet.save();
+                    }
+                }
+            }
+        }
+    } catch (err) {
+        console.error('Legacy snippet migration error:', err);
+    }
+
+    const snippets = await Snippet.find({ owner: req.user._id }).sort({ createdAt: -1 });
     res.status(200).json(snippets);
 };
 
@@ -32,26 +47,25 @@ const getSnippets = async (req, res) => {
     res.status(200).json(snippets);
 };
 
-// @desc    Snippet oluştur
-// @route   POST /api/snippets
-// @access  Private
 const createSnippet = async (req, res) => {
     const { title, command, note, category, projectId, tags } = req.body;
 
-    if (!title || !command || !projectId) {
+    if (!title || !command) {
         res.status(400);
-        throw new Error('Başlık, komut ve proje ID zorunludur');
+        throw new Error('Başlık ve komut alanları zorunludur');
     }
 
-    const project = await Project.findById(projectId);
-    if (!project) {
-        res.status(404);
-        throw new Error('Proje bulunamadı');
-    }
+    if (projectId) {
+        const project = await Project.findById(projectId);
+        if (!project) {
+            res.status(404);
+            throw new Error('Proje bulunamadı');
+        }
 
-    if (project.owner.toString() !== req.user.id) {
-        res.status(401);
-        throw new Error('Bu projeye snippet ekleme yetkiniz yok');
+        if (project.owner.toString() !== req.user.id) {
+            res.status(401);
+            throw new Error('Bu projeye snippet ekleme yetkiniz yok');
+        }
     }
 
     const snippet = await Snippet.create({
@@ -60,7 +74,8 @@ const createSnippet = async (req, res) => {
         note,
         category,
         tags,
-        projectId
+        owner: req.user._id,
+        projectId: projectId || undefined
     });
 
     res.status(201).json(snippet);
@@ -77,10 +92,17 @@ const updateSnippet = async (req, res) => {
         throw new Error('Snippet bulunamadı');
     }
 
-    const project = await Project.findById(snippet.projectId);
-    if (project.owner.toString() !== req.user.id) {
-        res.status(401);
-        throw new Error('Bu snippetı güncelleme yetkiniz yok');
+    if (snippet.owner) {
+        if (snippet.owner.toString() !== req.user.id) {
+            res.status(401);
+            throw new Error('Bu snippetı güncelleme yetkiniz yok');
+        }
+    } else if (snippet.projectId) {
+        const project = await Project.findById(snippet.projectId);
+        if (project && project.owner.toString() !== req.user.id) {
+            res.status(401);
+            throw new Error('Bu snippetı güncelleme yetkiniz yok');
+        }
     }
 
     const updatedSnippet = await Snippet.findByIdAndUpdate(req.params.id, req.body, {
@@ -101,10 +123,17 @@ const deleteSnippet = async (req, res) => {
         throw new Error('Snippet bulunamadı');
     }
 
-    const project = await Project.findById(snippet.projectId);
-    if (project.owner.toString() !== req.user.id) {
-        res.status(401);
-        throw new Error('Bu snippetı silme yetkiniz yok');
+    if (snippet.owner) {
+        if (snippet.owner.toString() !== req.user.id) {
+            res.status(401);
+            throw new Error('Bu snippetı silme yetkiniz yok');
+        }
+    } else if (snippet.projectId) {
+        const project = await Project.findById(snippet.projectId);
+        if (project && project.owner.toString() !== req.user.id) {
+            res.status(401);
+            throw new Error('Bu snippetı silme yetkiniz yok');
+        }
     }
 
     await snippet.deleteOne();
@@ -123,10 +152,17 @@ const toggleFavorite = async (req, res) => {
         throw new Error('Snippet bulunamadı');
     }
 
-    const project = await Project.findById(snippet.projectId);
-    if (project.owner.toString() !== req.user.id) {
-        res.status(401);
-        throw new Error('Bu snippetı güncelleme yetkiniz yok');
+    if (snippet.owner) {
+        if (snippet.owner.toString() !== req.user.id) {
+            res.status(401);
+            throw new Error('Bu snippetı güncelleme yetkiniz yok');
+        }
+    } else if (snippet.projectId) {
+        const project = await Project.findById(snippet.projectId);
+        if (project && project.owner.toString() !== req.user.id) {
+            res.status(401);
+            throw new Error('Bu snippetı güncelleme yetkiniz yok');
+        }
     }
 
     snippet.isFavorite = !snippet.isFavorite;
