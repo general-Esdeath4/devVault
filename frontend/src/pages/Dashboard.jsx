@@ -13,6 +13,7 @@ const Dashboard = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [copiedId, setCopiedId] = useState(null);
+    const [activeTab, setActiveTab] = useState('overview');
     const { user } = useContext(AuthContext);
     const navigate = useNavigate();
 
@@ -132,9 +133,6 @@ const Dashboard = () => {
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
-                <button className="btn-primary flex-center gap-sm new-project-btn" onClick={() => setShowModal(true)}>
-                    <Plus size={20} /> Yeni Proje
-                </button>
             </div>
 
             {loading ? (
@@ -191,105 +189,150 @@ const Dashboard = () => {
             ) : (
                 /* NORMAL DASHBOARD */
                 <>
-                    {/* STATS GRID */}
-                    <div className="stats-grid">
-                        <div className="stat-card">
-                            <div className="stat-icon-wrapper blue"><FolderKanban size={24} /></div>
-                            <div className="stat-details">
-                                <h3>{totalProjects}</h3>
-                                <p>Toplam Proje</p>
-                            </div>
-                        </div>
-                        <div className="stat-card">
-                            <div className="stat-icon-wrapper purple"><Code2 size={24} /></div>
-                            <div className="stat-details">
-                                <h3>{totalSnippets}</h3>
-                                <p>Toplam Snippet</p>
-                            </div>
-                        </div>
-                        <div className="stat-card">
-                            <div className="stat-icon-wrapper yellow"><Star size={24} /></div>
-                            <div className="stat-details">
-                                <h3>{favoriteCount}</h3>
-                                <p>Favori Komut</p>
-                            </div>
-                        </div>
-                        <div className="stat-card">
-                            <div className="stat-icon-wrapper green"><Clock size={24} /></div>
-                            <div className="stat-details">
-                                <h3 style={{fontSize: '1.2rem', lineHeight: '28px'}}>{lastUpdateDate}</h3>
-                                <p>Son Güncelleme</p>
-                            </div>
-                        </div>
+                    {/* SUB NAVBAR */}
+                    <div className="dashboard-sub-nav">
+                        <button 
+                            className={`sub-nav-item ${activeTab === 'overview' ? 'active' : ''}`} 
+                            onClick={() => setActiveTab('overview')}
+                        >
+                            <LayoutDashboard size={18} />
+                            <span>Genel Bakış</span>
+                        </button>
+                        <button 
+                            className={`sub-nav-item ${activeTab === 'projects' ? 'active' : ''}`} 
+                            onClick={() => setActiveTab('projects')}
+                        >
+                            <FolderKanban size={18} />
+                            <span>Son Projeler</span>
+                        </button>
+                        <button 
+                            className={`sub-nav-item ${activeTab === 'favorites' ? 'active' : ''}`} 
+                            onClick={() => setActiveTab('favorites')}
+                        >
+                            <Star size={18} />
+                            <span>Favori Komutlar</span>
+                        </button>
                     </div>
 
-                    <div className="dashboard-content-grid">
-                        {/* RECENT PROJECTS */}
-                        <div className="dashboard-section">
-                            <div className="section-header">
-                                <h3 className="section-title">Son Kullanılan Projeler</h3>
-                                <Link to="/projects" className="view-all-link">Tümünü Gör</Link>
-                            </div>
-                            <div className="recent-projects-list">
-                                {recentProjects.length > 0 ? recentProjects.map(project => {
-                                    const snippetCount = snippets.filter(s => s.projectId === project._id).length;
-                                    return (
-                                        <div key={project._id} className="recent-project-card" onClick={() => navigate(`/projects/${project._id}`)}>
-                                            <div className="recent-project-info">
-                                                <h4>{project.title}</h4>
-                                                <div className="tech-stack-mini">
-                                                    {project.techStack?.slice(0, 3).map((tech, i) => <span key={i} className="tech-badge">{tech}</span>)}
-                                                </div>
-                                            </div>
-                                            <div className="recent-project-meta">
-                                                <span className={`status-badge status-${project.status.replace(/\s+/g, '-').toLowerCase()}`}>
-                                                    {project.status}
-                                                </span>
-                                                <span className="snippet-count-badge" title="Snippet Sayısı">
-                                                    <Code2 size={14} /> {snippetCount}
-                                                </span>
-                                            </div>
+                    {/* TAB CONTENTS */}
+                    <div className="dashboard-tab-content">
+                        {activeTab === 'overview' && (
+                            <div className="tab-pane fade-in">
+                                {/* STATS GRID */}
+                                <div className="stats-grid" style={{ marginBottom: '2rem' }}>
+                                    <div className="stat-card">
+                                        <div className="stat-icon-wrapper blue"><FolderKanban size={24} /></div>
+                                        <div className="stat-details">
+                                            <h3>{totalProjects}</h3>
+                                            <p>Toplam Proje</p>
                                         </div>
-                                    );
-                                }) : (
-                                    <div className="empty-state mini">Projeleriniz burada görünecek.</div>
-                                )}
-                            </div>
-                        </div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <div className="stat-icon-wrapper purple"><Code2 size={24} /></div>
+                                        <div className="stat-details">
+                                            <h3>{totalSnippets}</h3>
+                                            <p>Toplam Snippet</p>
+                                        </div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <div className="stat-icon-wrapper yellow"><Star size={24} /></div>
+                                        <div className="stat-details">
+                                            <h3>{favoriteCount}</h3>
+                                            <p>Favori Komut</p>
+                                        </div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <div className="stat-icon-wrapper green"><Clock size={24} /></div>
+                                        <div className="stat-details">
+                                            <h3 style={{fontSize: '1.2rem', lineHeight: '28px'}}>{lastUpdateDate}</h3>
+                                            <p>Son Güncelleme</p>
+                                        </div>
+                                    </div>
+                                </div>
 
-                        {/* FAVORITE COMMANDS */}
-                        <div className="dashboard-section">
-                            <div className="section-header">
-                                <h3 className="section-title">Favori Komutlar</h3>
+                                <div className="dashboard-welcome-banner">
+                                    <h3>Geliştirme Günlüğünüze Hoş Geldiniz! 🚀</h3>
+                                    <p>Sol menüden projelerinizi yönetebilir, sık kullandığınız kod bloklarını ve terminal komutlarını Komut Kasası'na kaydederek işinizi hızlandırabilirsiniz.</p>
+                                </div>
                             </div>
-                            <div className="fav-snippets-list">
-                                {favoriteSnippets.length > 0 ? favoriteSnippets.slice(0, 5).map(snippet => (
-                                    <div key={snippet._id} className="fav-snippet-item">
-                                        <div className="fav-snippet-header">
-                                            <div className="fav-snippet-title-area">
-                                                <button className="star-btn active" onClick={() => toggleFavorite(snippet._id)} title="Favorilerden Çıkar">
-                                                    <Star size={16} fill="currentColor" />
-                                                </button>
-                                                <h5>{snippet.title}</h5>
-                                                <span className="category-badge mini">{snippet.category}</span>
-                                            </div>
-                                            <div className="fav-actions">
-                                                <button className="icon-btn" onClick={() => copyToClipboard(snippet.command, snippet._id)} title="Kopyala">
-                                                    {copiedId === snippet._id ? <CheckCircle2 size={16} color="#2ecc71" /> : <Copy size={16} />}
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <code className="mini-code">{snippet.command}</code>
+                        )}
+
+                        {activeTab === 'projects' && (
+                            <div className="tab-pane fade-in">
+                                <div className="dashboard-section full-width">
+                                    <div className="section-header">
+                                        <h3 className="section-title">Son Kullanılan Projeler</h3>
+                                        <Link to="/projects" className="view-all-link">Tümünü Gör</Link>
                                     </div>
-                                )) : (
-                                    <div className="empty-state mini">
-                                        <Star size={30} style={{opacity: 0.3, marginBottom: '0.5rem'}} />
-                                        <p>Henüz favori komutunuz yok.</p>
-                                        <small>Proje detaylarından favori ekleyebilirsiniz.</small>
+                                    <div className="recent-projects-list">
+                                        {recentProjects.length > 0 ? recentProjects.map(project => {
+                                            const snippetCount = snippets.filter(s => s.projectId === project._id).length;
+                                            return (
+                                                <div key={project._id} className="recent-project-card" onClick={() => navigate(`/projects/${project._id}`)}>
+                                                    <div className="recent-project-info">
+                                                        <h4>{project.title}</h4>
+                                                        <p className="project-desc-short">{project.description || 'Açıklama belirtilmemiş.'}</p>
+                                                        <div className="tech-stack-mini">
+                                                            {project.techStack?.slice(0, 5).map((tech, i) => <span key={i} className="tech-badge">{tech}</span>)}
+                                                        </div>
+                                                    </div>
+                                                    <div className="recent-project-meta">
+                                                        <span className={`status-badge status-${project.status.replace(/\s+/g, '-').toLowerCase()}`}>
+                                                            {project.status}
+                                                        </span>
+                                                        <span className="snippet-count-badge" title="Snippet Sayısı">
+                                                            <Code2 size={14} /> {snippetCount}
+                                                        </span>
+                                                        <span className="project-updated-date" style={{ fontSize: '0.75rem', opacity: 0.6, marginTop: '0.25rem' }}>
+                                                            {new Date(project.updatedAt).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        }) : (
+                                            <div className="empty-state mini">Projeleriniz burada görünecek.</div>
+                                        )}
                                     </div>
-                                )}
+                                </div>
                             </div>
-                        </div>
+                        )}
+
+                        {activeTab === 'favorites' && (
+                            <div className="tab-pane fade-in">
+                                <div className="dashboard-section full-width">
+                                    <div className="section-header">
+                                        <h3 className="section-title">Favori Komutlar</h3>
+                                    </div>
+                                    <div className="fav-snippets-list">
+                                        {favoriteSnippets.length > 0 ? favoriteSnippets.map(snippet => (
+                                            <div key={snippet._id} className="fav-snippet-item">
+                                                <div className="fav-snippet-header">
+                                                    <div className="fav-snippet-title-area">
+                                                        <button className="star-btn active" onClick={() => toggleFavorite(snippet._id)} title="Favorilerden Çıkar">
+                                                            <Star size={16} fill="currentColor" />
+                                                        </button>
+                                                        <h5>{snippet.title}</h5>
+                                                        <span className="category-badge mini">{snippet.category}</span>
+                                                    </div>
+                                                    <div className="fav-actions">
+                                                        <button className="icon-btn" onClick={() => copyToClipboard(snippet.command, snippet._id)} title="Kopyala">
+                                                            {copiedId === snippet._id ? <CheckCircle2 size={16} color="#2ecc71" /> : <Copy size={16} />}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <code className="mini-code">{snippet.command}</code>
+                                            </div>
+                                        )) : (
+                                            <div className="empty-state mini">
+                                                <Star size={30} style={{opacity: 0.3, marginBottom: '0.5rem'}} />
+                                                <p>Henüz favori komutunuz yok.</p>
+                                                <small>Komutlarınızı favorilere ekleyerek buradan hızlıca erişebilirsiniz.</small>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </>
             )}
