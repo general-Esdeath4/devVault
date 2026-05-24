@@ -4,7 +4,24 @@ import { Search, Copy, CheckCircle2, Star, Edit2, Trash2, Loader2, Code2, Plus }
 import { toast } from 'react-toastify';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import ConfirmModal from '../components/ConfirmModal';
 import './SnippetManager.css';
+
+const POPULAR_CATEGORIES = [
+    "Terminal / Bash",
+    "Git / Version Control",
+    "Docker / Containers",
+    "Database / SQL",
+    "Frontend (React/CSS/JS)",
+    "Backend (Node/Python/Go)",
+    "DevOps / CI-CD",
+    "Package Manager (npm/yarn)",
+    "API / HTTP Requests",
+    "Cloud & Deployment",
+    "Scripting / Automation",
+    "Security / SSH / Keys",
+    "Other / Diğer"
+];
 
 const SnippetManager = () => {
     const [snippets, setSnippets] = useState([]);
@@ -18,11 +35,24 @@ const SnippetManager = () => {
     const [editSnippet, setEditSnippet] = useState(null);
 
     const [showAddModal, setShowAddModal] = useState(false);
+
+    // Kategori State'leri
+    const [isCustomCategory, setIsCustomCategory] = useState(false);
+    const [customCategoryVal, setCustomCategoryVal] = useState('');
+    const [isEditCustomCategory, setIsEditCustomCategory] = useState(false);
+    const [editCustomCategoryVal, setEditCustomCategoryVal] = useState('');
+
+    // Silme Onay Modali State'i
+    const [confirmDelete, setConfirmDelete] = useState({
+        isOpen: false,
+        id: null
+    });
+
     const [newSnippet, setNewSnippet] = useState({
         title: '',
         command: '',
         note: '',
-        category: 'Terminal',
+        category: POPULAR_CATEGORIES[0],
         tags: '',
         projectId: ''
     });
@@ -74,8 +104,37 @@ const SnippetManager = () => {
         }
     };
 
-    const handleDelete = async (id) => {
-        if(!window.confirm('Bu komutu silmek istediğinize emin misiniz?')) return;
+    const closeAddModal = () => {
+        setShowAddModal(false);
+        setIsCustomCategory(false);
+        setCustomCategoryVal('');
+        setNewSnippet({
+            title: '',
+            command: '',
+            note: '',
+            category: POPULAR_CATEGORIES[0],
+            tags: '',
+            projectId: ''
+        });
+    };
+
+    const closeEditModal = () => {
+        setShowModal(false);
+        setIsEditCustomCategory(false);
+        setEditCustomCategoryVal('');
+        setEditSnippet(null);
+    };
+
+    const handleDeleteClick = (id) => {
+        setConfirmDelete({
+            isOpen: true,
+            id: id
+        });
+    };
+
+    const handleConfirmDelete = async () => {
+        const id = confirmDelete.id;
+        if (!id) return;
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
@@ -92,26 +151,19 @@ const SnippetManager = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+            const categoryToSend = isCustomCategory ? customCategoryVal : newSnippet.category;
             const payload = {
                 title: newSnippet.title,
                 command: newSnippet.command,
                 note: newSnippet.note,
-                category: newSnippet.category,
+                category: categoryToSend,
                 projectId: newSnippet.projectId || undefined,
                 tags: newSnippet.tags ? newSnippet.tags.split(',').map(t => t.trim()).filter(t => t !== '') : []
             };
 
             await axios.post('http://localhost:5000/api/snippets', payload, config);
             toast.success('Yeni komut eklendi');
-            setShowAddModal(false);
-            setNewSnippet({
-                title: '',
-                command: '',
-                note: '',
-                category: 'Terminal',
-                tags: '',
-                projectId: ''
-            });
+            closeAddModal();
             fetchSnippets();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Komut eklenemedi');
@@ -123,18 +175,19 @@ const SnippetManager = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+            const categoryToSend = isEditCustomCategory ? editCustomCategoryVal : editSnippet.category;
             const payload = {
                 title: editSnippet.title,
                 command: editSnippet.command,
                 note: editSnippet.note,
-                category: editSnippet.category,
+                category: categoryToSend,
                 projectId: editSnippet.projectId || null,
                 tags: typeof editSnippet.tags === 'string' ? editSnippet.tags.split(',').map(t => t.trim()).filter(t => t !== '') : editSnippet.tags
             };
 
             await axios.put(`http://localhost:5000/api/snippets/${editSnippet._id}`, payload, config);
             toast.success('Komut güncellendi');
-            setShowModal(false);
+            closeEditModal();
             fetchSnippets();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Güncellenemedi');
@@ -142,8 +195,12 @@ const SnippetManager = () => {
     };
 
     const openEditModal = (snippet) => {
+        const isCustom = !POPULAR_CATEGORIES.includes(snippet.category);
+        setIsEditCustomCategory(isCustom);
+        setEditCustomCategoryVal(isCustom ? snippet.category : '');
         setEditSnippet({
             ...snippet,
+            category: isCustom ? 'CUSTOM' : snippet.category,
             tags: snippet.tags ? snippet.tags.join(', ') : ''
         });
         setShowModal(true);
@@ -252,7 +309,7 @@ const SnippetManager = () => {
                                 <button className="btn-snippet edit" onClick={() => openEditModal(snippet)}>
                                     <Edit2 size={16} /> Düzenle
                                 </button>
-                                <button className="btn-snippet delete" onClick={() => handleDelete(snippet._id)}>
+                                <button className="btn-snippet delete" onClick={() => handleDeleteClick(snippet._id)}>
                                     <Trash2 size={16} /> Sil
                                 </button>
                             </div>
@@ -272,7 +329,7 @@ const SnippetManager = () => {
                     <div className="modal-content">
                         <div className="modal-header">
                             <h3>Komutu Düzenle</h3>
-                            <button className="close-btn" onClick={() => setShowModal(false)}>&times;</button>
+                            <button className="close-btn" onClick={closeEditModal}>&times;</button>
                         </div>
                         <form onSubmit={handleUpdate}>
                             <div className="form-group">
@@ -294,14 +351,39 @@ const SnippetManager = () => {
                             </div>
                             <div className="form-group">
                                 <label>Kategori</label>
-                                <select className="form-input" value={editSnippet.category} onChange={e => setEditSnippet({...editSnippet, category: e.target.value})}>
-                                    <option value="Terminal">Terminal</option>
-                                    <option value="Docker">Docker</option>
-                                    <option value="Database">Database</option>
-                                    <option value="Git">Git</option>
-                                    <option value="Server">Server</option>
-                                    <option value="Other">Diğer</option>
+                                <select 
+                                    className="form-input" 
+                                    value={isEditCustomCategory ? 'CUSTOM' : editSnippet.category} 
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        if (val === 'CUSTOM') {
+                                            setIsEditCustomCategory(true);
+                                            setEditSnippet({...editSnippet, category: 'CUSTOM'});
+                                        } else {
+                                            setIsEditCustomCategory(false);
+                                            setEditSnippet({...editSnippet, category: val});
+                                        }
+                                    }}
+                                >
+                                    {POPULAR_CATEGORIES.map((cat, i) => (
+                                        <option key={i} value={cat}>{cat}</option>
+                                    ))}
+                                    <option value="CUSTOM">+ Yeni Kategori Ekle...</option>
                                 </select>
+                                {isEditCustomCategory && (
+                                    <input 
+                                        type="text" 
+                                        className="form-input" 
+                                        style={{ marginTop: '0.5rem' }} 
+                                        placeholder="Özel kategori adı girin..." 
+                                        value={editCustomCategoryVal}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            setEditCustomCategoryVal(val);
+                                        }}
+                                        required
+                                    />
+                                )}
                             </div>
                             <div className="form-group">
                                 <label>Etiketler (Tags) - Virgülle ayırın</label>
@@ -309,10 +391,16 @@ const SnippetManager = () => {
                             </div>
                             <div className="form-group">
                                 <label>Açıklama / Not</label>
-                                <input type="text" className="form-input" value={editSnippet.note} onChange={e => setEditSnippet({...editSnippet, note: e.target.value})} />
+                                <textarea 
+                                    className="form-input" 
+                                    rows="3"
+                                    placeholder="Komuta dair açıklama yazın..." 
+                                    value={editSnippet.note} 
+                                    onChange={e => setEditSnippet({...editSnippet, note: e.target.value})} 
+                                ></textarea>
                             </div>
                             <div className="modal-actions">
-                                <button type="button" className="btn-outline" onClick={() => setShowModal(false)}>İptal</button>
+                                <button type="button" className="btn-outline" onClick={closeEditModal}>İptal</button>
                                 <button type="submit" className="btn-primary" style={{width: 'auto'}}>Kaydet</button>
                             </div>
                         </form>
@@ -326,7 +414,7 @@ const SnippetManager = () => {
                     <div className="modal-content">
                         <div className="modal-header">
                             <h3>Yeni Komut Ekle</h3>
-                            <button className="close-btn" onClick={() => setShowAddModal(false)}>&times;</button>
+                            <button className="close-btn" onClick={closeAddModal}>&times;</button>
                         </div>
                         <form onSubmit={handleCreate}>
                             <div className="form-group">
@@ -368,16 +456,37 @@ const SnippetManager = () => {
                                 <label>Kategori</label>
                                 <select 
                                     className="form-input" 
-                                    value={newSnippet.category} 
-                                    onChange={e => setNewSnippet({...newSnippet, category: e.target.value})}
+                                    value={isCustomCategory ? 'CUSTOM' : newSnippet.category} 
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        if (val === 'CUSTOM') {
+                                            setIsCustomCategory(true);
+                                            setNewSnippet({...newSnippet, category: ''});
+                                        } else {
+                                            setIsCustomCategory(false);
+                                            setNewSnippet({...newSnippet, category: val});
+                                        }
+                                    }}
                                 >
-                                    <option value="Terminal">Terminal</option>
-                                    <option value="Docker">Docker</option>
-                                    <option value="Database">Database</option>
-                                    <option value="Git">Git</option>
-                                    <option value="Server">Server</option>
-                                    <option value="Other">Diğer</option>
+                                    {POPULAR_CATEGORIES.map((cat, i) => (
+                                        <option key={i} value={cat}>{cat}</option>
+                                    ))}
+                                    <option value="CUSTOM">+ Yeni Kategori Ekle...</option>
                                 </select>
+                                {isCustomCategory && (
+                                    <input 
+                                        type="text" 
+                                        className="form-input" 
+                                        style={{ marginTop: '0.5rem' }} 
+                                        placeholder="Özel kategori adı girin..." 
+                                        value={customCategoryVal}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            setCustomCategoryVal(val);
+                                        }}
+                                        required
+                                    />
+                                )}
                             </div>
                             <div className="form-group">
                                 <label>Etiketler (Tags) - Virgülle ayırın</label>
@@ -391,22 +500,32 @@ const SnippetManager = () => {
                             </div>
                             <div className="form-group">
                                 <label>Açıklama / Not</label>
-                                <input 
-                                    type="text" 
+                                <textarea 
                                     className="form-input" 
+                                    rows="3"
                                     placeholder="Komuta dair kısa bir not yazın..." 
                                     value={newSnippet.note} 
                                     onChange={e => setNewSnippet({...newSnippet, note: e.target.value})} 
-                                />
+                                ></textarea>
                             </div>
                             <div className="modal-actions">
-                                <button type="button" className="btn-outline" onClick={() => setShowAddModal(false)}>İptal</button>
+                                <button type="button" className="btn-outline" onClick={closeAddModal}>İptal</button>
                                 <button type="submit" className="btn-primary" style={{width: 'auto'}}>Kaydet</button>
                             </div>
                         </form>
                     </div>
                 </div>
             )}
+
+            <ConfirmModal 
+                isOpen={confirmDelete.isOpen}
+                onClose={() => setConfirmDelete({ isOpen: false, id: null })}
+                onConfirm={handleConfirmDelete}
+                title="Komutu Sil"
+                message="Bu komutu silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+                confirmText="Sil"
+                cancelText="İptal"
+            />
         </div>
     );
 };

@@ -4,9 +4,26 @@ import axios from 'axios';
 import { Plus, ArrowLeft, Copy, Trash2, CheckCircle2, Calendar, FolderKanban, Star, Edit2, Code, Link as LinkIcon } from 'lucide-react';
 import { toast } from 'react-toastify';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ConfirmModal from '../components/ConfirmModal';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import './ProjectDetail.css';
+
+const POPULAR_CATEGORIES = [
+    "Terminal / Bash",
+    "Git / Version Control",
+    "Docker / Containers",
+    "Database / SQL",
+    "Frontend (React/CSS/JS)",
+    "Backend (Node/Python/Go)",
+    "DevOps / CI-CD",
+    "Package Manager (npm/yarn)",
+    "API / HTTP Requests",
+    "Cloud & Deployment",
+    "Scripting / Automation",
+    "Security / SSH / Keys",
+    "Other / Diğer"
+];
 
 const ProjectDetail = () => {
     const { id } = useParams();
@@ -16,11 +33,21 @@ const ProjectDetail = () => {
     const [showModal, setShowModal] = useState(false);
     const [copiedId, setCopiedId] = useState(null);
 
+    // Kategori State'leri
+    const [isCustomCategory, setIsCustomCategory] = useState(false);
+    const [customCategoryVal, setCustomCategoryVal] = useState('');
+
+    // Silme Onay Modali State'i
+    const [confirmDelete, setConfirmDelete] = useState({
+        isOpen: false,
+        id: null
+    });
+
     const [newSnippet, setNewSnippet] = useState({
         title: '',
         command: '',
         note: '',
-        category: 'Terminal',
+        category: POPULAR_CATEGORIES[0],
         tags: ''
     });
 
@@ -46,13 +73,22 @@ const ProjectDetail = () => {
         fetchProjectAndSnippets();
     }, [id]);
 
+    const closeAddModal = () => {
+        setShowModal(false);
+        setIsCustomCategory(false);
+        setCustomCategoryVal('');
+        setNewSnippet({ title: '', command: '', note: '', category: POPULAR_CATEGORIES[0], tags: '' });
+    };
+
     const handleCreateSnippet = async (e) => {
         e.preventDefault();
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+            const categoryToSend = isCustomCategory ? customCategoryVal : newSnippet.category;
             const payload = { 
                 ...newSnippet, 
+                category: categoryToSend,
                 projectId: id,
                 tags: typeof newSnippet.tags === 'string'
                     ? newSnippet.tags.split(',').map(t => t.trim()).filter(Boolean)
@@ -61,8 +97,7 @@ const ProjectDetail = () => {
             
             await axios.post('http://localhost:5000/api/snippets', payload, config);
             toast.success('Komut başarıyla eklendi');
-            setShowModal(false);
-            setNewSnippet({ title: '', command: '', note: '', category: 'Terminal', tags: '' });
+            closeAddModal();
             fetchProjectAndSnippets();
         } catch (error) {
             toast.error('Komut eklenemedi');
@@ -87,12 +122,20 @@ const ProjectDetail = () => {
         }
     };
 
-    const deleteSnippet = async (snippetId) => {
-        if(!window.confirm('Bu komutu silmek istediğinize emin misiniz?')) return;
+    const handleDeleteClick = (id) => {
+        setConfirmDelete({
+            isOpen: true,
+            id: id
+        });
+    };
+
+    const handleConfirmDelete = async () => {
+        const id = confirmDelete.id;
+        if (!id) return;
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            await axios.delete(`http://localhost:5000/api/snippets/${snippetId}`, config);
+            await axios.delete(`http://localhost:5000/api/snippets/${id}`, config);
             toast.success('Komut silindi');
             fetchProjectAndSnippets();
         } catch (error) {
@@ -181,7 +224,7 @@ const ProjectDetail = () => {
                                                 </button>
                                                 <h4>{snippet.title}</h4>
                                             </div>
-                                            <button className="icon-btn danger" onClick={() => deleteSnippet(snippet._id)} title="Sil"><Trash2 size={18} /></button>
+                                            <button className="icon-btn danger" onClick={() => handleDeleteClick(snippet._id)} title="Sil"><Trash2 size={18} /></button>
                                         </div>
                                         
                                         {snippet.tags && snippet.tags.length > 0 && (
@@ -226,7 +269,7 @@ const ProjectDetail = () => {
                     <div className="modal-content">
                         <div className="modal-header">
                             <h3>Yeni Komut (Snippet) Ekle</h3>
-                            <button className="close-btn" onClick={() => setShowModal(false)}>&times;</button>
+                            <button className="close-btn" onClick={closeAddModal}>&times;</button>
                         </div>
                         <form onSubmit={handleCreateSnippet}>
                             <div className="form-group">
@@ -239,14 +282,39 @@ const ProjectDetail = () => {
                             </div>
                             <div className="form-group">
                                 <label>Kategori</label>
-                                <select className="form-input" value={newSnippet.category} onChange={e => setNewSnippet({...newSnippet, category: e.target.value})}>
-                                    <option value="Terminal">Terminal</option>
-                                    <option value="Docker">Docker</option>
-                                    <option value="Database">Database</option>
-                                    <option value="Git">Git</option>
-                                    <option value="Server">Server</option>
-                                    <option value="Other">Diğer</option>
+                                <select 
+                                    className="form-input" 
+                                    value={isCustomCategory ? 'CUSTOM' : newSnippet.category} 
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        if (val === 'CUSTOM') {
+                                            setIsCustomCategory(true);
+                                            setNewSnippet({...newSnippet, category: ''});
+                                        } else {
+                                            setIsCustomCategory(false);
+                                            setNewSnippet({...newSnippet, category: val});
+                                        }
+                                    }}
+                                >
+                                    {POPULAR_CATEGORIES.map((cat, i) => (
+                                        <option key={i} value={cat}>{cat}</option>
+                                    ))}
+                                    <option value="CUSTOM">+ Yeni Kategori Ekle...</option>
                                 </select>
+                                {isCustomCategory && (
+                                    <input 
+                                        type="text" 
+                                        className="form-input" 
+                                        style={{ marginTop: '0.5rem' }} 
+                                        placeholder="Özel kategori adı girin..." 
+                                        value={customCategoryVal}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            setCustomCategoryVal(val);
+                                        }}
+                                        required
+                                    />
+                                )}
                             </div>
                             <div className="form-group">
                                 <label>Etiketler (Tags) - Virgülle ayırın</label>
@@ -254,16 +322,32 @@ const ProjectDetail = () => {
                             </div>
                             <div className="form-group">
                                 <label>Açıklama / Not (Opsiyonel)</label>
-                                <input type="text" className="form-input" value={newSnippet.note} onChange={e => setNewSnippet({...newSnippet, note: e.target.value})} placeholder="Örn: Sadece development ortamında çalıştırın." />
+                                <textarea 
+                                    className="form-input" 
+                                    rows="3"
+                                    placeholder="Örn: Sadece development ortamında çalıştırın." 
+                                    value={newSnippet.note} 
+                                    onChange={e => setNewSnippet({...newSnippet, note: e.target.value})} 
+                                ></textarea>
                             </div>
                             <div className="modal-actions">
-                                <button type="button" className="btn-outline" onClick={() => setShowModal(false)}>İptal</button>
+                                <button type="button" className="btn-outline" onClick={closeAddModal}>İptal</button>
                                 <button type="submit" className="btn-primary" style={{width: 'auto'}}>Kaydet</button>
                             </div>
                         </form>
                     </div>
                 </div>
             )}
+
+            <ConfirmModal 
+                isOpen={confirmDelete.isOpen}
+                onClose={() => setConfirmDelete({ isOpen: false, id: null })}
+                onConfirm={handleConfirmDelete}
+                title="Komutu Sil"
+                message="Bu komutu silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+                confirmText="Sil"
+                cancelText="İptal"
+            />
         </div>
     );
 };

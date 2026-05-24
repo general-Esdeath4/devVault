@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Plus, Loader2, Search, Edit2, Trash2, Eye } from 'lucide-react';
 import { toast } from 'react-toastify';
+import ConfirmModal from '../components/ConfirmModal';
 import './Projects.css';
 
 const Projects = () => {
@@ -16,6 +17,12 @@ const Projects = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
     const [techFilter, setTechFilter] = useState('All');
+
+    // Silme Onay Modali State'i
+    const [confirmDelete, setConfirmDelete] = useState({
+        isOpen: false,
+        id: null
+    });
 
     const [newProject, setNewProject] = useState({
         _id: null,
@@ -96,8 +103,16 @@ const Projects = () => {
         }
     };
 
-    const handleDelete = async (id) => {
-        if(!window.confirm('Projeyi silmek istediğinize emin misiniz?')) return;
+    const handleDeleteClick = (id) => {
+        setConfirmDelete({
+            isOpen: true,
+            id: id
+        });
+    };
+
+    const handleConfirmDelete = async () => {
+        const id = confirmDelete.id;
+        if (!id) return;
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
@@ -185,7 +200,7 @@ const Projects = () => {
                                 <button className="btn-card btn-edit" onClick={() => openEditModal(project)}>
                                     <Edit2 size={16} /> Düzenle
                                 </button>
-                                <button className="btn-card btn-delete" onClick={() => handleDelete(project._id)}>
+                                <button className="btn-card btn-delete" onClick={() => handleDeleteClick(project._id)}>
                                     <Trash2 size={16} /> Sil
                                 </button>
                             </div>
@@ -249,6 +264,16 @@ const Projects = () => {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal 
+                isOpen={confirmDelete.isOpen}
+                onClose={() => setConfirmDelete({ isOpen: false, id: null })}
+                onConfirm={handleConfirmDelete}
+                title="Projeyi Sil"
+                message="Bu projeyi silmek istediğinize emin misiniz? Projeyle ilişkili tüm komutlar ve veriler de silinecektir. Bu işlem geri alınamaz."
+                confirmText="Sil"
+                cancelText="İptal"
+            />
         </div>
     );
 };
