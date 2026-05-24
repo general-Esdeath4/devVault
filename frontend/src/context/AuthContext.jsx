@@ -48,8 +48,13 @@ export const AuthProvider = ({ children }) => {
         toast.info('Çıkış yapıldı');
     };
 
+    const updateUser = (newUserData) => {
+        setUser(newUserData);
+        localStorage.setItem('userInfo', JSON.stringify(newUserData));
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, register, logout, loading, updateUser }}>
             {children}
         </AuthContext.Provider>
     );

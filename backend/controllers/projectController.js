@@ -1,4 +1,5 @@
 const Project = require('../models/Project');
+const logActivity = require('../utils/logger');
 
 // @desc    Kullanıcıya ait tüm projeleri getir
 // @route   GET /api/projects
@@ -29,6 +30,9 @@ const createProject = async (req, res) => {
         owner: req.user._id
     });
 
+    // Aktiviteyi logla
+    await logActivity(req.user._id, 'CREATE_PROJECT', `"${project.title}" adlı projeyi oluşturdu`);
+
     res.status(201).json(project);
 };
 
@@ -53,6 +57,9 @@ const updateProject = async (req, res) => {
         new: true,
     });
 
+    // Aktiviteyi logla
+    await logActivity(req.user._id, 'UPDATE_PROJECT', `"${updatedProject.title}" adlı projeyi güncelledi`);
+
     res.status(200).json(updatedProject);
 };
 
@@ -72,7 +79,11 @@ const deleteProject = async (req, res) => {
         throw new Error('Bu projeyi silme yetkiniz yok');
     }
 
+    const projectTitle = project.title;
     await project.deleteOne();
+
+    // Aktiviteyi logla
+    await logActivity(req.user._id, 'DELETE_PROJECT', `"${projectTitle}" adlı projeyi sildi`);
 
     res.status(200).json({ id: req.params.id });
 };

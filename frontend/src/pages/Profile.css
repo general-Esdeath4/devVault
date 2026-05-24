@@ -1,0 +1,188 @@
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1.1fr;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+@media (max-width: 992px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.profile-card-section {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.5rem;
+    transition: box-shadow 0.3s ease;
+}
+
+.profile-card-section:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.profile-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.75rem;
+}
+
+.profile-card-header h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.card-header-icon {
+    color: var(--primary-color);
+}
+
+/* Timeline/Zaman Tüneli Stilleri */
+.timeline-card {
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+/* Custom scrollbar for timeline card */
+.timeline-card::-webkit-scrollbar {
+    width: 6px;
+}
+.timeline-card::-webkit-scrollbar-track {
+    background: transparent;
+}
+.timeline-card::-webkit-scrollbar-thumb {
+    background: rgba(128, 128, 128, 0.2);
+    border-radius: 4px;
+}
+.timeline-card::-webkit-scrollbar-thumb:hover {
+    background: rgba(128, 128, 128, 0.4);
+}
+
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+    border-left: 2px solid var(--border-color);
+    margin-left: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+.timeline-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.timeline-icon {
+    position: absolute;
+    left: -2.6rem; /* center on the line */
+    top: 2px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+    border: 2px solid var(--card-bg);
+}
+
+.timeline-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.timeline-desc {
+    font-size: 0.95rem;
+    color: var(--text-color);
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+.timeline-time {
+    font-size: 0.75rem;
+    opacity: 0.5;
+    font-weight: 600;
+}
+
+.empty-timeline-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    text-align: center;
+    color: var(--text-color);
+}
+
+.empty-timeline-state p {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.empty-timeline-state small {
+    opacity: 0.6;
+}
+
+.logout-profile-btn {
+    transition: all 0.3s ease;
+}
+
+.logout-profile-btn:hover {
+    background-color: rgba(231, 76, 60, 0.05) !important;
+}
+
+/* spin loader activity */
+.spin-loader {
+    font-size: 1rem;
+    opacity: 0.7;
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+/* Şifre Göster/Gizle Butonu Stilleri */
+.password-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-input-wrapper .form-input {
+    padding-right: 2.75rem;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 0.875rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    color: var(--text-color);
+    opacity: 0.6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.password-toggle-btn:hover {
+    opacity: 1;
+    color: var(--primary-color);
+}

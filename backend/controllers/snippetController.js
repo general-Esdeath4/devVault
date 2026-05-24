@@ -1,5 +1,6 @@
 const Snippet = require('../models/Snippet');
 const Project = require('../models/Project');
+const logActivity = require('../utils/logger');
 
 // @desc    Kullanıcıya ait tüm snippetları getir
 // @route   GET /api/snippets
@@ -78,6 +79,9 @@ const createSnippet = async (req, res) => {
         projectId: projectId || undefined
     });
 
+    // Aktiviteyi logla
+    await logActivity(req.user._id, 'CREATE_SNIPPET', `"${snippet.title}" adlı komutu ekledi`);
+
     res.status(201).json(snippet);
 };
 
@@ -109,6 +113,9 @@ const updateSnippet = async (req, res) => {
         new: true,
     });
 
+    // Aktiviteyi logla
+    await logActivity(req.user._id, 'UPDATE_SNIPPET', `"${updatedSnippet.title}" adlı komutu güncelledi`);
+
     res.status(200).json(updatedSnippet);
 };
 
@@ -136,7 +143,11 @@ const deleteSnippet = async (req, res) => {
         }
     }
 
+    const snippetTitle = snippet.title;
     await snippet.deleteOne();
+
+    // Aktiviteyi logla
+    await logActivity(req.user._id, 'DELETE_SNIPPET', `"${snippetTitle}" adlı komutu sildi`);
 
     res.status(200).json({ id: req.params.id });
 };
@@ -167,6 +178,13 @@ const toggleFavorite = async (req, res) => {
 
     snippet.isFavorite = !snippet.isFavorite;
     const updatedSnippet = await snippet.save();
+
+    // Aktiviteyi logla
+    await logActivity(
+        req.user._id, 
+        'TOGGLE_FAVORITE', 
+        `"${updatedSnippet.title}" adlı komutunu ${updatedSnippet.isFavorite ? 'favoriye ekledi' : 'favoriden çıkardı'}`
+    );
 
     res.status(200).json(updatedSnippet);
 };

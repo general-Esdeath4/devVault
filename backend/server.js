@@ -9,6 +9,7 @@ const { errorHandler } = require('./middlewares/errorMiddleware');
 const authRoutes = require('./routes/authRoutes');
 const projectRoutes = require('./routes/projectRoutes');
 const snippetRoutes = require('./routes/snippetRoutes');
+const activityRoutes = require('./routes/activityRoutes');
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/snippets', snippetRoutes);
+app.use('/api/activities', activityRoutes);
 
 // Kök Dizin
 app.get('/', (req, res) => {
