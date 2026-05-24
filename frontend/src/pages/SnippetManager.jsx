@@ -7,21 +7,18 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import ConfirmModal from '../components/ConfirmModal';
 import './SnippetManager.css';
 
-const POPULAR_CATEGORIES = [
-    "Terminal / Bash",
-    "Git / Version Control",
-    "Docker / Containers",
-    "Database / SQL",
-    "Frontend (React/CSS/JS)",
-    "Backend (Node/Python/Go)",
-    "DevOps / CI-CD",
-    "Package Manager (npm/yarn)",
-    "API / HTTP Requests",
-    "Cloud & Deployment",
-    "Scripting / Automation",
-    "Security / SSH / Keys",
-    "Other / Diğer"
-];
+const CATEGORIES = ['Terminal', 'Docker', 'Database', 'Git', 'Server', 'MongoDB', 'SQL', 'Other'];
+
+const CATEGORY_LABELS = {
+    'Terminal': 'Terminal',
+    'Docker': 'Docker',
+    'Database': 'Database',
+    'Git': 'Git',
+    'Server': 'Server',
+    'MongoDB': 'MongoDB',
+    'SQL': 'SQL',
+    'Other': 'Diğer'
+};
 
 const SnippetManager = () => {
     const [snippets, setSnippets] = useState([]);
@@ -36,12 +33,6 @@ const SnippetManager = () => {
 
     const [showAddModal, setShowAddModal] = useState(false);
 
-    // Kategori State'leri
-    const [isCustomCategory, setIsCustomCategory] = useState(false);
-    const [customCategoryVal, setCustomCategoryVal] = useState('');
-    const [isEditCustomCategory, setIsEditCustomCategory] = useState(false);
-    const [editCustomCategoryVal, setEditCustomCategoryVal] = useState('');
-
     // Silme Onay Modali State'i
     const [confirmDelete, setConfirmDelete] = useState({
         isOpen: false,
@@ -52,7 +43,7 @@ const SnippetManager = () => {
         title: '',
         command: '',
         note: '',
-        category: POPULAR_CATEGORIES[0],
+        category: CATEGORIES[0],
         tags: '',
         projectId: ''
     });
@@ -106,13 +97,11 @@ const SnippetManager = () => {
 
     const closeAddModal = () => {
         setShowAddModal(false);
-        setIsCustomCategory(false);
-        setCustomCategoryVal('');
         setNewSnippet({
             title: '',
             command: '',
             note: '',
-            category: POPULAR_CATEGORIES[0],
+            category: CATEGORIES[0],
             tags: '',
             projectId: ''
         });
@@ -120,8 +109,6 @@ const SnippetManager = () => {
 
     const closeEditModal = () => {
         setShowModal(false);
-        setIsEditCustomCategory(false);
-        setEditCustomCategoryVal('');
         setEditSnippet(null);
     };
 
@@ -151,12 +138,11 @@ const SnippetManager = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            const categoryToSend = isCustomCategory ? customCategoryVal : newSnippet.category;
             const payload = {
                 title: newSnippet.title,
                 command: newSnippet.command,
                 note: newSnippet.note,
-                category: categoryToSend,
+                category: newSnippet.category,
                 projectId: newSnippet.projectId || undefined,
                 tags: newSnippet.tags ? newSnippet.tags.split(',').map(t => t.trim()).filter(t => t !== '') : []
             };
@@ -175,12 +161,11 @@ const SnippetManager = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            const categoryToSend = isEditCustomCategory ? editCustomCategoryVal : editSnippet.category;
             const payload = {
                 title: editSnippet.title,
                 command: editSnippet.command,
                 note: editSnippet.note,
-                category: categoryToSend,
+                category: editSnippet.category,
                 projectId: editSnippet.projectId || null,
                 tags: typeof editSnippet.tags === 'string' ? editSnippet.tags.split(',').map(t => t.trim()).filter(t => t !== '') : editSnippet.tags
             };
@@ -195,12 +180,8 @@ const SnippetManager = () => {
     };
 
     const openEditModal = (snippet) => {
-        const isCustom = !POPULAR_CATEGORIES.includes(snippet.category);
-        setIsEditCustomCategory(isCustom);
-        setEditCustomCategoryVal(isCustom ? snippet.category : '');
         setEditSnippet({
             ...snippet,
-            category: isCustom ? 'CUSTOM' : snippet.category,
             tags: snippet.tags ? snippet.tags.join(', ') : ''
         });
         setShowModal(true);
@@ -259,7 +240,7 @@ const SnippetManager = () => {
                 <select className="filter-select" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
                     <option value="All">Tüm Kategoriler</option>
                     {allCategories.map((cat, i) => (
-                        <option key={i} value={cat}>{cat}</option>
+                        <option key={i} value={cat}>{cat === 'Other' ? 'Diğer' : cat}</option>
                     ))}
                 </select>
             </div>
@@ -353,37 +334,13 @@ const SnippetManager = () => {
                                 <label>Kategori</label>
                                 <select 
                                     className="form-input" 
-                                    value={isEditCustomCategory ? 'CUSTOM' : editSnippet.category} 
-                                    onChange={e => {
-                                        const val = e.target.value;
-                                        if (val === 'CUSTOM') {
-                                            setIsEditCustomCategory(true);
-                                            setEditSnippet({...editSnippet, category: 'CUSTOM'});
-                                        } else {
-                                            setIsEditCustomCategory(false);
-                                            setEditSnippet({...editSnippet, category: val});
-                                        }
-                                    }}
+                                    value={editSnippet.category} 
+                                    onChange={e => setEditSnippet({...editSnippet, category: e.target.value})}
                                 >
-                                    {POPULAR_CATEGORIES.map((cat, i) => (
-                                        <option key={i} value={cat}>{cat}</option>
+                                    {CATEGORIES.map(cat => (
+                                        <option key={cat} value={cat}>{CATEGORY_LABELS[cat]}</option>
                                     ))}
-                                    <option value="CUSTOM">+ Yeni Kategori Ekle...</option>
                                 </select>
-                                {isEditCustomCategory && (
-                                    <input 
-                                        type="text" 
-                                        className="form-input" 
-                                        style={{ marginTop: '0.5rem' }} 
-                                        placeholder="Özel kategori adı girin..." 
-                                        value={editCustomCategoryVal}
-                                        onChange={e => {
-                                            const val = e.target.value;
-                                            setEditCustomCategoryVal(val);
-                                        }}
-                                        required
-                                    />
-                                )}
                             </div>
                             <div className="form-group">
                                 <label>Etiketler (Tags) - Virgülle ayırın</label>
@@ -456,37 +413,13 @@ const SnippetManager = () => {
                                 <label>Kategori</label>
                                 <select 
                                     className="form-input" 
-                                    value={isCustomCategory ? 'CUSTOM' : newSnippet.category} 
-                                    onChange={e => {
-                                        const val = e.target.value;
-                                        if (val === 'CUSTOM') {
-                                            setIsCustomCategory(true);
-                                            setNewSnippet({...newSnippet, category: ''});
-                                        } else {
-                                            setIsCustomCategory(false);
-                                            setNewSnippet({...newSnippet, category: val});
-                                        }
-                                    }}
+                                    value={newSnippet.category} 
+                                    onChange={e => setNewSnippet({...newSnippet, category: e.target.value})}
                                 >
-                                    {POPULAR_CATEGORIES.map((cat, i) => (
-                                        <option key={i} value={cat}>{cat}</option>
+                                    {CATEGORIES.map(cat => (
+                                        <option key={cat} value={cat}>{CATEGORY_LABELS[cat]}</option>
                                     ))}
-                                    <option value="CUSTOM">+ Yeni Kategori Ekle...</option>
                                 </select>
-                                {isCustomCategory && (
-                                    <input 
-                                        type="text" 
-                                        className="form-input" 
-                                        style={{ marginTop: '0.5rem' }} 
-                                        placeholder="Özel kategori adı girin..." 
-                                        value={customCategoryVal}
-                                        onChange={e => {
-                                            const val = e.target.value;
-                                            setCustomCategoryVal(val);
-                                        }}
-                                        required
-                                    />
-                                )}
                             </div>
                             <div className="form-group">
                                 <label>Etiketler (Tags) - Virgülle ayırın</label>

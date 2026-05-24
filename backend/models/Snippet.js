@@ -7,7 +7,7 @@ const snippetSchema = mongoose.Schema(
         note: { type: String },
         category: {
             type: String,
-            enum: ['Terminal', 'Docker', 'Database', 'Git', 'Server', 'Other'],
+            enum: ['Terminal', 'Docker', 'Database', 'Git', 'Server', 'MongoDB', 'SQL', 'Other'],
             default: 'Other',
         },
         isFavorite: {

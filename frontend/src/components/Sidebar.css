@@ -10,12 +10,17 @@
 }
 
 .sidebar-logo {
-    padding: 1.5rem 1.5rem;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sidebar-logo h2 {
     font-size: 1.5rem;
     font-weight: 800;
     color: var(--primary-color);
-    border-bottom: 1px solid var(--border-color);
-    text-align: center;
     letter-spacing: 1px;
 }
 

@@ -9,21 +9,18 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import './ProjectDetail.css';
 
-const POPULAR_CATEGORIES = [
-    "Terminal / Bash",
-    "Git / Version Control",
-    "Docker / Containers",
-    "Database / SQL",
-    "Frontend (React/CSS/JS)",
-    "Backend (Node/Python/Go)",
-    "DevOps / CI-CD",
-    "Package Manager (npm/yarn)",
-    "API / HTTP Requests",
-    "Cloud & Deployment",
-    "Scripting / Automation",
-    "Security / SSH / Keys",
-    "Other / Diğer"
-];
+const CATEGORIES = ['Terminal', 'Docker', 'Database', 'Git', 'Server', 'MongoDB', 'SQL', 'Other'];
+
+const CATEGORY_LABELS = {
+    'Terminal': 'Terminal',
+    'Docker': 'Docker',
+    'Database': 'Database',
+    'Git': 'Git',
+    'Server': 'Server',
+    'MongoDB': 'MongoDB',
+    'SQL': 'SQL',
+    'Other': 'Diğer'
+};
 
 const ProjectDetail = () => {
     const { id } = useParams();
@@ -32,10 +29,6 @@ const ProjectDetail = () => {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [copiedId, setCopiedId] = useState(null);
-
-    // Kategori State'leri
-    const [isCustomCategory, setIsCustomCategory] = useState(false);
-    const [customCategoryVal, setCustomCategoryVal] = useState('');
 
     // Silme Onay Modali State'i
     const [confirmDelete, setConfirmDelete] = useState({
@@ -47,7 +40,7 @@ const ProjectDetail = () => {
         title: '',
         command: '',
         note: '',
-        category: POPULAR_CATEGORIES[0],
+        category: CATEGORIES[0],
         tags: ''
     });
 
@@ -75,9 +68,7 @@ const ProjectDetail = () => {
 
     const closeAddModal = () => {
         setShowModal(false);
-        setIsCustomCategory(false);
-        setCustomCategoryVal('');
-        setNewSnippet({ title: '', command: '', note: '', category: POPULAR_CATEGORIES[0], tags: '' });
+        setNewSnippet({ title: '', command: '', note: '', category: CATEGORIES[0], tags: '' });
     };
 
     const handleCreateSnippet = async (e) => {
@@ -85,10 +76,8 @@ const ProjectDetail = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            const categoryToSend = isCustomCategory ? customCategoryVal : newSnippet.category;
             const payload = { 
                 ...newSnippet, 
-                category: categoryToSend,
                 projectId: id,
                 tags: typeof newSnippet.tags === 'string'
                     ? newSnippet.tags.split(',').map(t => t.trim()).filter(Boolean)
@@ -284,37 +273,13 @@ const ProjectDetail = () => {
                                 <label>Kategori</label>
                                 <select 
                                     className="form-input" 
-                                    value={isCustomCategory ? 'CUSTOM' : newSnippet.category} 
-                                    onChange={e => {
-                                        const val = e.target.value;
-                                        if (val === 'CUSTOM') {
-                                            setIsCustomCategory(true);
-                                            setNewSnippet({...newSnippet, category: ''});
-                                        } else {
-                                            setIsCustomCategory(false);
-                                            setNewSnippet({...newSnippet, category: val});
-                                        }
-                                    }}
+                                    value={newSnippet.category} 
+                                    onChange={e => setNewSnippet({...newSnippet, category: e.target.value})}
                                 >
-                                    {POPULAR_CATEGORIES.map((cat, i) => (
-                                        <option key={i} value={cat}>{cat}</option>
+                                    {CATEGORIES.map(cat => (
+                                        <option key={cat} value={cat}>{CATEGORY_LABELS[cat]}</option>
                                     ))}
-                                    <option value="CUSTOM">+ Yeni Kategori Ekle...</option>
                                 </select>
-                                {isCustomCategory && (
-                                    <input 
-                                        type="text" 
-                                        className="form-input" 
-                                        style={{ marginTop: '0.5rem' }} 
-                                        placeholder="Özel kategori adı girin..." 
-                                        value={customCategoryVal}
-                                        onChange={e => {
-                                            const val = e.target.value;
-                                            setCustomCategoryVal(val);
-                                        }}
-                                        required
-                                    />
-                                )}
                             </div>
                             <div className="form-group">
                                 <label>Etiketler (Tags) - Virgülle ayırın</label>
