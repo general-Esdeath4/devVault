@@ -345,6 +345,24 @@
     .results-grid {
         grid-template-columns: 1fr;
     }
+    .global-search-container {
+        min-width: 100%;
+    }
+    .dashboard-top-bar {
+        gap: 1rem;
+    }
+    .page-title {
+        font-size: 1.6rem;
+    }
+    .dashboard-welcome-banner {
+        padding: 1.25rem;
+    }
+    .dashboard-welcome-banner h3 {
+        font-size: 1.2rem;
+    }
+    .dashboard-welcome-banner p {
+        font-size: 0.9rem;
+    }
 }
 
 .results-column h4 {

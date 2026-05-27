@@ -53,3 +53,61 @@
     box-shadow: inset 20px 0 20px -20px rgba(6, 182, 212, 0.5);
     text-shadow: 0 0 8px rgba(6, 182, 212, 0.4);
 }
+
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100vw;
+        height: 60px;
+        flex-direction: row;
+        border-right: none;
+        border-top: 1px solid var(--border-color);
+        background-color: var(--sidebar-bg);
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+        border-radius: 16px 16px 0 0;
+    }
+
+    .sidebar-logo {
+        display: none;
+    }
+
+    .sidebar-nav {
+        flex-direction: row;
+        width: 100%;
+        padding: 0;
+        margin: 0;
+        justify-content: space-around;
+        align-items: center;
+        gap: 0;
+        height: 100%;
+    }
+
+    .nav-item {
+        flex: 1;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 0.5rem 0;
+        gap: 4px;
+        height: 100%;
+        border-left: none;
+        border-top: 3px solid transparent;
+        font-size: 0.75rem;
+    }
+
+    .nav-item.active {
+        border-left: none;
+        border-top: 3px solid var(--primary-color);
+        background-color: transparent;
+        box-shadow: none;
+        text-shadow: none;
+    }
+
+    .nav-item svg {
+        width: 18px;
+        height: 18px;
+    }
+}

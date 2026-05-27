@@ -218,3 +218,46 @@ textarea.form-input {
 .status-test-ediliyor { background: rgba(245, 158, 11, 0.15); color: var(--warning-color); border: 1px solid rgba(245, 158, 11, 0.3); }
 .status-sorunlu { background: rgba(239, 68, 68, 0.15); color: var(--danger-color); border: 1px solid rgba(239, 68, 68, 0.3); }
 .status-tamamlandı { background: rgba(148, 163, 184, 0.15); color: #94A3B8; border: 1px solid rgba(148, 163, 184, 0.3); }
+
+/* Mobil Uyumluluk */
+@media (max-width: 768px) {
+    .app-container {
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    .main-content {
+        height: auto;
+        min-height: calc(100vh - 60px);
+        padding-bottom: 70px;
+        overflow-y: visible;
+    }
+
+    .page-container {
+        padding: 1.25rem 1rem 5rem 1rem;
+    }
+
+    .navbar {
+        padding: 1rem;
+        height: auto;
+    }
+
+    .user-profile .username {
+        display: none;
+    }
+
+    .dashboard-sub-nav {
+        width: 100% !important;
+        overflow-x: auto;
+        white-space: nowrap;
+        display: flex;
+        padding: 0.25rem;
+    }
+
+    .sub-nav-item {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        flex: 1;
+        justify-content: center;
+    }
+}
