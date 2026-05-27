@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Plus, Loader2, Search, LayoutDashboard, Code2, Star, Clock, Copy, CheckCircle2, ChevronRight, FolderKanban } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import { toast } from 'react-toastify';
+import { API_URL } from '../config';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -32,8 +33,8 @@ const Dashboard = () => {
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
             
             const [projectsRes, snippetsRes] = await Promise.all([
-                axios.get('http://localhost:5000/api/projects', config),
-                axios.get('http://localhost:5000/api/snippets', config)
+                axios.get(`${API_URL}/api/projects`, config),
+                axios.get(`${API_URL}/api/snippets`, config)
             ]);
             
             setProjects(projectsRes.data);
@@ -60,7 +61,7 @@ const Dashboard = () => {
                     ? newProject.techStack.split(',').map(tech => tech.trim()).filter(Boolean)
                     : []
             };
-            await axios.post('http://localhost:5000/api/projects', payload, config);
+            await axios.post(`${API_URL}/api/projects`, payload, config);
             toast.success('Proje oluşturuldu');
             setShowModal(false);
             setNewProject({ title: '', description: '', status: 'Hazır', techStack: '', githubLink: '', liveLink: '' });
@@ -82,7 +83,7 @@ const Dashboard = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            await axios.patch(`http://localhost:5000/api/snippets/${snippetId}/favorite`, {}, config);
+            await axios.patch(`${API_URL}/api/snippets/${snippetId}/favorite`, {}, config);
             fetchData();
         } catch (error) {
             toast.error('Favori güncellenemedi');

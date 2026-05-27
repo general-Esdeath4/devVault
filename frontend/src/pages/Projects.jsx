@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Plus, Loader2, Search, Edit2, Trash2, Eye } from 'lucide-react';
 import { toast } from 'react-toastify';
 import ConfirmModal from '../components/ConfirmModal';
+import { API_URL } from '../config';
 import './Projects.css';
 
 const Projects = () => {
@@ -38,7 +39,7 @@ const Projects = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            const { data } = await axios.get('http://localhost:5000/api/projects', config);
+            const { data } = await axios.get(`${API_URL}/api/projects`, config);
             setProjects(data);
         } catch (error) {
             console.error('Proje yükleme hatası:', error);
@@ -88,10 +89,10 @@ const Projects = () => {
             };
 
             if (editMode) {
-                await axios.put(`http://localhost:5000/api/projects/${newProject._id}`, payload, config);
+                await axios.put(`${API_URL}/api/projects/${newProject._id}`, payload, config);
                 toast.success('Proje güncellendi');
             } else {
-                await axios.post('http://localhost:5000/api/projects', payload, config);
+                await axios.post(`${API_URL}/api/projects`, payload, config);
                 toast.success('Proje oluşturuldu');
             }
             
@@ -116,7 +117,7 @@ const Projects = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            await axios.delete(`http://localhost:5000/api/projects/${id}`, config);
+            await axios.delete(`${API_URL}/api/projects/${id}`, config);
             toast.success('Proje silindi');
             fetchProjects();
         } catch (error) {

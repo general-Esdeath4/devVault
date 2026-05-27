@@ -7,6 +7,7 @@ import {
     PlusCircle, Edit2, Trash2, Key, Star, FileText, Settings,
     Eye, EyeOff
 } from 'lucide-react';
+import { API_URL } from '../config';
 import './Profile.css';
 
 const Profile = () => {
@@ -33,7 +34,7 @@ const Profile = () => {
     const fetchActivities = async () => {
         try {
             const config = { headers: { Authorization: `Bearer ${user?.token}` } };
-            const { data } = await axios.get('http://localhost:5000/api/activities', config);
+            const { data } = await axios.get(`${API_URL}/api/activities`, config);
             setActivities(data);
         } catch (error) {
             console.error('Aktiviteler yüklenemedi:', error);
@@ -55,7 +56,7 @@ const Profile = () => {
         setUpdatingProfile(true);
         try {
             const config = { headers: { Authorization: `Bearer ${user.token}` } };
-            const { data } = await axios.put('http://localhost:5000/api/auth/profile', { username, bio }, config);
+            const { data } = await axios.put(`${API_URL}/api/auth/profile`, { username, bio }, config);
             
             // Context güncelle
             updateUser(data);
@@ -78,7 +79,7 @@ const Profile = () => {
         setUpdatingPassword(true);
         try {
             const config = { headers: { Authorization: `Bearer ${user.token}` } };
-            await axios.put('http://localhost:5000/api/auth/password', { oldPassword, newPassword }, config);
+            await axios.put(`${API_URL}/api/auth/password`, { oldPassword, newPassword }, config);
             
             toast.success('Şifre başarıyla güncellendi!');
             setOldPassword('');

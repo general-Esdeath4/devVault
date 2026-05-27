@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import ConfirmModal from '../components/ConfirmModal';
+import { API_URL } from '../config';
 import './SnippetManager.css';
 
 const CATEGORIES = ['Terminal', 'Docker', 'Database', 'Git', 'Server', 'MongoDB', 'SQL', 'Other'];
@@ -52,7 +53,7 @@ const SnippetManager = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            const { data } = await axios.get('http://localhost:5000/api/snippets', config);
+            const { data } = await axios.get(`${API_URL}/api/snippets`, config);
             setSnippets(data);
         } catch (error) {
             console.error('Komutları yükleme hatası:', error);
@@ -65,7 +66,7 @@ const SnippetManager = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            const { data } = await axios.get('http://localhost:5000/api/projects', config);
+            const { data } = await axios.get(`${API_URL}/api/projects`, config);
             setProjects(data);
         } catch (error) {
             console.error('Projeleri yükleme hatası:', error);
@@ -88,7 +89,7 @@ const SnippetManager = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            await axios.patch(`http://localhost:5000/api/snippets/${snippetId}/favorite`, {}, config);
+            await axios.patch(`${API_URL}/api/snippets/${snippetId}/favorite`, {}, config);
             fetchSnippets();
         } catch (error) {
             toast.error('Favori güncellenemedi');
@@ -125,7 +126,7 @@ const SnippetManager = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            await axios.delete(`http://localhost:5000/api/snippets/${id}`, config);
+            await axios.delete(`${API_URL}/api/snippets/${id}`, config);
             toast.success('Komut silindi');
             fetchSnippets();
         } catch (error) {
@@ -147,7 +148,7 @@ const SnippetManager = () => {
                 tags: newSnippet.tags ? newSnippet.tags.split(',').map(t => t.trim()).filter(t => t !== '') : []
             };
 
-            await axios.post('http://localhost:5000/api/snippets', payload, config);
+            await axios.post(`${API_URL}/api/snippets`, payload, config);
             toast.success('Yeni komut eklendi');
             closeAddModal();
             fetchSnippets();
@@ -170,7 +171,7 @@ const SnippetManager = () => {
                 tags: typeof editSnippet.tags === 'string' ? editSnippet.tags.split(',').map(t => t.trim()).filter(t => t !== '') : editSnippet.tags
             };
 
-            await axios.put(`http://localhost:5000/api/snippets/${editSnippet._id}`, payload, config);
+            await axios.put(`${API_URL}/api/snippets/${editSnippet._id}`, payload, config);
             toast.success('Komut güncellendi');
             closeEditModal();
             fetchSnippets();

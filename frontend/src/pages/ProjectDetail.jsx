@@ -7,6 +7,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import ConfirmModal from '../components/ConfirmModal';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { API_URL } from '../config';
 import './ProjectDetail.css';
 
 const CATEGORIES = ['Terminal', 'Docker', 'Database', 'Git', 'Server', 'MongoDB', 'SQL', 'Other'];
@@ -49,11 +50,11 @@ const ProjectDetail = () => {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
             
-            const { data: projectsData } = await axios.get('http://localhost:5000/api/projects', config);
+            const { data: projectsData } = await axios.get(`${API_URL}/api/projects`, config);
             const foundProject = projectsData.find(p => p._id === id);
             setProject(foundProject);
 
-            const { data: snippetsData } = await axios.get(`http://localhost:5000/api/snippets/project/${id}`, config);
+            const { data: snippetsData } = await axios.get(`${API_URL}/api/snippets/project/${id}`, config);
             setSnippets(snippetsData);
         } catch (error) {
             console.error('Veri yükleme hatası:', error);
@@ -84,7 +85,7 @@ const ProjectDetail = () => {
                     : []
             };
             
-            await axios.post('http://localhost:5000/api/snippets', payload, config);
+            await axios.post(`${API_URL}/api/snippets`, payload, config);
             toast.success('Komut başarıyla eklendi');
             closeAddModal();
             fetchProjectAndSnippets();
@@ -104,7 +105,7 @@ const ProjectDetail = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            await axios.patch(`http://localhost:5000/api/snippets/${snippetId}/favorite`, {}, config);
+            await axios.patch(`${API_URL}/api/snippets/${snippetId}/favorite`, {}, config);
             fetchProjectAndSnippets();
         } catch (error) {
             toast.error('Favori güncellenemedi');
@@ -124,7 +125,7 @@ const ProjectDetail = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            await axios.delete(`http://localhost:5000/api/snippets/${id}`, config);
+            await axios.delete(`${API_URL}/api/snippets/${id}`, config);
             toast.success('Komut silindi');
             fetchProjectAndSnippets();
         } catch (error) {
